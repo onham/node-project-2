@@ -35,5 +35,5 @@ MongoClient.connect(`mongodb://localhost:27017/TodoApp`, (err, client) => {  //c
 	});
 
 
-	client.close(); //finalizes connection with server
+	client.close(); //ends connection with server
 });  
