@@ -3,7 +3,7 @@ const { MongoClient, ObjectID } = require('mongodb') //pulling off 'MongoClient'
 const obj = new ObjectID();
 console.log(obj);
 
-MongoClient.connect(`mongodb://localhost:27017/TodoApp`, (err, client) => {  //connecting to mongodb database
+MongoClient.connect(`mongodb://localhost:27017/TodoApp`, async (err, client) => {  //connecting to mongodb database
 	if (err) {
 		return console.log('unable to connect to server');
 	}
@@ -23,16 +23,16 @@ MongoClient.connect(`mongodb://localhost:27017/TodoApp`, (err, client) => {  //c
 
 	// });
 
-	db.collection('Todos').insertOne({
-		// _id: 123 , // we can customize the id number
-		name: 'Quanny',
-		age: 26
-	}, (err, res) => {
-		if (err) {
-			return console.log(`something went wrong`, err);
-		}
+	try {
+		const res = await db.collection('Todos').insertOne({
+			// _id: 123 , // we can customize the id number
+			name: 'Quanny',
+			age: 26
+		});
 		console.log(res.ops[0]._id.getTimestamp());
-	});
+	} catch(err) {
+		console.log(err);
+	}
 
 
 	client.close(); //ends connection with server
