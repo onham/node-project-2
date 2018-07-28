@@ -24,3 +24,7 @@ app.post('/todos', (req, res) => {   //posting to url of /todos, user input will
 app.listen(3000, () => {
 	console.log('starting on port 3000')
 });
+
+module.exports = {
+	app
+}

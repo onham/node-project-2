@@ -17,7 +17,6 @@ const Todo = mongoose.model('Todo', {   //creating an object model -- will add a
 	}
 });
 
-
 module.exports = {
 	Todo
 }
