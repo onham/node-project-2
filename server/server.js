@@ -9,7 +9,7 @@ const app = express();
 
 app.use(bodyParser.json())     //configuring middleware
 
-app.post('/todos', (req, res) => {   //posting to url of /todos, user input will be our text prop
+app.post('/todos', (req, res) => {   //making POST request to url of /todos, user input will be our text prop
 	const todo = new Todo({
 		text: req.body.text,
 	});
@@ -21,8 +21,8 @@ app.post('/todos', (req, res) => {   //posting to url of /todos, user input will
  	});
 })
 
-app.get('/todos', (req, res) => {
-	Todo.find().then((todos) => {
+app.get('/todos', (req, res) => {  //making GET request to url
+	Todo.find().then((todos) => {   //model method -- finding and retrieving all entries from our 'todos' collection
 		res.send({     //sending back an object with our array in that object -- instead of sending back just an array, object provides more flexibility for the future
 			todos
 		})
