@@ -123,4 +123,20 @@ describe('GET /todos/:id', () => {
 			return e;
 		}
 	});
+});
+
+describe('DELETE /todos/:id', () => {
+	it('should delete an item by id', async () => {
+		try {
+			await supertest(app)
+			.delete(`/todos/${todos[1]._id.toHexString()}`)
+			.expect(200)
+			.expect((res) => {
+				assert.equal(todos[1].text, res.body.todo.text)
+			})
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
 })
