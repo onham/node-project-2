@@ -3,13 +3,13 @@ const mongoose = require('mongoose');
 const User = mongoose.model('User', {   
 	user: {
 		type: String,
-		require: true,
+		required: true,
 		minlength: 1,
 		trim: true
 	},
 	email: {                   
 		type: String,
-		require: true,
+		required: true,
 		minlength: 1,
 		trim: true
 	}
