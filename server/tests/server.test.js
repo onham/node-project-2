@@ -100,10 +100,10 @@ describe('GET /todos/:id', () => {
 	});
 
 	it('should return a 404 if id not found', async () => {
-		const id = new ObjectID();
+		const id = new ObjectID().toHexString();
 		try {
 			await supertest(app)
-			.get(`/todos/${id.toHexString()}`)
+			.get(`/todos/${id}`)
 			.expect(404)
 		} catch(e) {
 			console.log(e);
@@ -127,13 +127,43 @@ describe('GET /todos/:id', () => {
 
 describe('DELETE /todos/:id', () => {
 	it('should delete an item by id', async () => {
+		const hexId = todos[1]._id.toHexString();
 		try {
 			await supertest(app)
-			.delete(`/todos/${todos[1]._id.toHexString()}`)
+			.delete(`/todos/${hexId}`)
 			.expect(200)
 			.expect((res) => {
 				assert.equal(todos[1].text, res.body.todo.text)
-			})
+			});
+
+			await Todo.findById(hexId).then((todo) => {
+				assert.equal(null, todo);
+			});
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
+	it('should return 404 if todo not found', async () => {
+		const id = new ObjectID().toHexString();
+		try {
+			await supertest(app)
+			.delete(`/todos/${id}`)
+			.expect(404)
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
+	it('should return 404 if object id is invalid', async () => {
+		const id = new ObjectID().toHexString();
+		const nonId = `${id}1`;
+		try {
+			await supertest(app)
+			.delete(`/todos/${nonId}`)
+			.expect(404)
 		} catch(e) {
 			console.log(e);
 			return e;
