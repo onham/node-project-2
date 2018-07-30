@@ -145,8 +145,8 @@ describe('DELETE /todos/:id', () => {
 		}
 	});
 
-	it('should return 404 if todo not found', async () => {
-		const id = new ObjectID().toHexString();
+	it('should return a 404 if id not found', async () => {
+		const id = new ObjectID().toHexString();		
 		try {
 			await supertest(app)
 			.delete(`/todos/${id}`)
