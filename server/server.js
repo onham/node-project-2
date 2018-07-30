@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');  //takes our strings and converts it to a js object
 const { ObjectID } = require('mongodb');
+const _ = require('lodash');
 
 const { mongoose } = require('./db/mongoose');
 const { Todo } = require('./models/todo');
@@ -57,6 +58,7 @@ app.get('/todos/:id', (req, res) => {
 	});
 });
 
+
 app.delete('/todos/:id', (req, res) => {
 	const id = req.params.id;
 
@@ -68,7 +70,7 @@ app.delete('/todos/:id', (req, res) => {
 		if (!todo) {
 			return res.status(404).send();
 		}
-		
+
 		res.send({
 			todo
 		});
@@ -76,6 +78,38 @@ app.delete('/todos/:id', (req, res) => {
 		res.status(400).send()
 	});
 });
+
+
+app.patch(`/todos/:id`, (req, res) => {
+	const id = req.params.id;
+	const body = _.pick(req.body, ['text', 'completed'])    //pick method of lodash allows you to scan the body of the request and turn its props into props of the const you declared
+
+	if (!ObjectID.isValid(id)){  
+		return res.status(404).send();
+	}   
+
+	if (_.isBoolean(body.completed) && body.completed) {   //if the completed field is a boolean and if it is true aka completed
+		body.completedAt = new Date().getTime(); //milliseconds after jan. 1 1970
+	} else {
+		body.completed = false;
+		body.completedAt = null;   //null removes the prop from the body
+	}
+
+	Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {    //takes mongodb operators -- new returns updated entry to us
+		if (!todo) {
+			return res.status(404).send();
+		}
+
+		res.send({
+			todo
+		})
+	}).catch((e) => {
+		res.status(400).send();
+	})
+
+
+});
+
 
 app.listen(port, () => {
 	console.log(`starting on port ${port}`);
