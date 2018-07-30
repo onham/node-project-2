@@ -37,10 +37,10 @@ app.get('/todos', (req, res) => {  //making GET request to url
 
 
 app.get('/todos/:id', (req, res) => {
-	// res.send(req.params);    //so here we are sending back the key-value pair associated with param designated after :
+    //so here we are sending back the key-value pair associated with param designated after :
 	const id = req.params.id
 
-	if (!ObjectID.isValid(id)){  //this method returns true if valid and false otherwise
+	if (!(ObjectID.isValid(id))){  //this method returns true if valid and false otherwise
 		return res.status(404).send();
 	}    
 
@@ -48,8 +48,9 @@ app.get('/todos/:id', (req, res) => {
 		if (!todo) {
 			return res.status(404).send();
 		}
-		res.send(todo);
-
+		res.send({
+			todo
+		});
 	}).catch((e) => res.status(400).send());
 });
 
