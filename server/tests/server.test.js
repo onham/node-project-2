@@ -12,7 +12,9 @@ const todos = [{
 },
 {
 	_id: new ObjectID(),
-	text: 'second test todo'
+	text: 'second test todo',
+	completed: true,
+	completedAt: 333
 }
 ];
 
@@ -170,3 +172,49 @@ describe('DELETE /todos/:id', () => {
 		}
 	});
 })
+
+describe('PATCH /todos/:id', () => {
+	it('should be able to update items', async () => {
+		const firstId = todos[0]._id.toHexString();
+		const text = 'updating through test'
+		try {
+			await supertest(app)
+			.patch(`/todos/${firstId}`)
+			.send({
+				text,
+				completed: true
+			})
+			.expect(200)
+			.expect((res) => {
+				assert.equal(text, res.body.todo.text);
+				assert.ok(res.body.todo.completed);
+				assert.equal('number', typeof(res.body.todo.completedAt));
+			})
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
+	it('should clear completedAt when todo is not completed', async () => {
+		const secondId = todos[1]._id.toHexString();
+		const text = 'updating second entry text'
+		try {
+			await supertest(app)
+			.patch(`/todos/${secondId}`)
+			.send({
+				text, 
+				completed: false
+			})
+			.expect(200)
+			.expect((res) => {
+				assert.equal(null, res.body.todo.completedAt);
+				assert.equal(text, res.body.todo.text);
+				assert.equal(false, res.body.todo.completed);
+			})
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+});

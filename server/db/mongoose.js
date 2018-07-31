@@ -4,7 +4,7 @@ const mongoose = require('mongoose');  //using Mongoose to create a model for ob
 mongoose.Promise = global.Promise; //putting in a promise library
 
 //connecting to mongodb:: if unable to connect to Heroku 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp');
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/TodoApp', { useNewUrlParser: true });
 
 module.exports = {
 	mongoose
