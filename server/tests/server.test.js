@@ -19,7 +19,7 @@ const todos = [{
 ];
 
 beforeEach(async () => {
-	await Todo.remove({});  //emptying out db before every test
+	await Todo.remove({});  //emptying out all items from collection before every test
 
 	await Todo.insertMany(todos); //inserting our created array
 })
@@ -36,7 +36,6 @@ describe('POST /todos', () => {
 			})
 			.expect(200)
 			.expect((res) => {    //remember that these are known as custom assumptions
-				// expect(res.body.text).toBe(text)
 				assert.equal(text, res.body.text);
 			});
 
