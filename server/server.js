@@ -23,7 +23,7 @@ app.post('/todos', (req, res) => {   //making POST request to url of /todos, use
 
 	todo.save().then((doc) => {    //actually saving to the database
 		res.send(doc);   //sending back the req to user
-	}, (e) => {
+	}).catch((e) => {
 		res.status(400).send(e);
  	});
 })
@@ -34,7 +34,7 @@ app.get('/todos', (req, res) => {  //making GET request to url
 		res.send({     //sending back an object with our array in that object -- instead of sending back just an array, object provides more flexibility for the future
 			todos
 		})
-	}, (e) => {
+	}).catch((e) => {
 		res.status(400).send(e);
 	})
 })
@@ -108,8 +108,24 @@ app.patch(`/todos/:id`, (req, res) => {
 	}).catch((e) => {
 		res.status(400).send();
 	})
+});
 
 
+app.post('/users/', (req, res) => {
+	const body = _.pick(req.body, ['email', 'password']);   
+
+	const user = new User(body);
+
+
+	user.save().then(() => {                       // we removed the arg here -- functionality still the same
+		return user.generateAuthToken();  
+	}).then((token) => {
+		res.header('x-auth', token).send(user); 
+		//'x-___' -- generating custom header for our specific purposes
+		//we have to send the token back as an http response header
+	}).catch((e) => {
+		res.status(400).send(e);	
+	})
 });
 
 
