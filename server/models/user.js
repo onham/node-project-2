@@ -48,7 +48,7 @@ UserSchema.methods.generateAuthToken = function() {  //using a regular function 
 	const token = jwt.sign({
 		_id: user._id.toHexString(), 
 		access 
-	}, '123abc').toString();
+	}, 'abc123').toString();
 
 	user.tokens = user.tokens.concat([{ 
 		access, 
@@ -60,6 +60,23 @@ UserSchema.methods.generateAuthToken = function() {  //using a regular function 
 	});
 }
 
+
+UserSchema.statics.findByToken = function(token) {    //statics are just methods added on to the model instead of the instance
+	const User = this;
+	let decoded;
+
+	try {
+		decoded = jwt.verify(token, 'abc123');
+	} catch(e) {
+		return Promise.reject    //returning rejected promise in case of error so our get request can catch error
+	}
+
+	return User.findOne({
+		_id: decoded._id,
+		'tokens.token': token,    //we put it in quotes because this is the way to query a nested document
+		'tokens.access': 'auth'
+	});
+};
 
 const User = mongoose.model('User', UserSchema);
 
