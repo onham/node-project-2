@@ -124,9 +124,9 @@ app.post('/users/', (req, res) => {
 	const user = new User(body);
 
 
-	user.save().then(() => {                       // we removed the arg here -- functionality still the same
-		return user.generateAuthToken();  
-	}).then((token) => {
+	user.save().then(() =>                      // we removed the arg here -- functionality still the same
+		user.generateAuthToken()  
+	).then((token) => {
 		res.header('x-auth', token).send(user);  //setting our header
 		//'x-___' -- generating custom header for our specific purposes
 		//we have to send the token back as an http response header

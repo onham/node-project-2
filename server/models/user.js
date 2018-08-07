@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({    //this is able to store the methods and properties associated with our User model 
 	email: {                   
@@ -50,7 +51,7 @@ UserSchema.methods.generateAuthToken = function() {  //using a regular function 
 		access 
 	}, 'abc123').toString();
 
-	user.tokens = user.tokens.concat([{ 
+	user.tokens = user.tokens.concat([{   //pushing to user's token array through concat
 		access, 
 		token 
 	}]);
@@ -77,6 +78,21 @@ UserSchema.statics.findByToken = function(token) {    //statics are just methods
 		'tokens.access': 'auth'
 	});
 };
+
+UserSchema.pre('save', function(next){  //mongoose middleware to run before a certain event
+	const user = this;
+
+	if (user.isModified('password')) {    //takes an individual property and returns true or false -- we only want to encrypt the pw if it is just modified
+		bcrypt.genSalt(10, (err, salt) => {    
+			bcrypt.hash(user.password, salt, (err, hash) => {
+				user.password = hash;
+				next();
+			});
+		}); 
+	} else {
+		next();
+	}   
+});
 
 const User = mongoose.model('User', UserSchema);
 
