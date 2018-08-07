@@ -2,27 +2,15 @@ const expect = require('expect');
 const supertest = require('supertest');
 const assert = require('assert');
 const { ObjectID } = require('mongodb');
+const { todos, populateTodos, users, populateUsers } = require('./seed/seed');
 
 const { Todo } = require('../models/todo');
+const { User } = require('../models/user');
 const { app } = require('../server');
 
-const todos = [{
-	_id: new ObjectID(),      //declaring id here so we can use in test -- remember this is in hex
-	text: 'first test todo'
-},
-{
-	_id: new ObjectID(),
-	text: 'second test todo',
-	completed: true,
-	completedAt: 333
-}
-];
 
-beforeEach(async () => {
-	await Todo.remove({});  //emptying out all items from collection before every test
-
-	await Todo.insertMany(todos); //inserting our created array
-})
+beforeEach(populateUsers);
+beforeEach(populateTodos);
 
 describe('POST /todos', () => {
 	it('should create a new todo', async () => {
@@ -211,6 +199,98 @@ describe('PATCH /todos/:id', () => {
 				assert.equal(text, res.body.todo.text);
 				assert.equal(false, res.body.todo.completed);
 			})
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+});
+
+
+describe('GET /users/me', () => {
+	it('should return user if authenticated', async () => {
+		try {
+			await supertest(app)
+			.get('/users/me')
+			.set('x-auth', users[0].tokens[0].token)
+			.expect(200)
+			.expect((res) => {
+				assert.equal(users[0]._id.toHexString(), res.body._id);
+				assert.equal(users[0].email, res.body.email);
+			})
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
+	it('should return 401 if not authenticated', async () => {
+		try {
+			await supertest(app)
+			.get('/users/me')
+			.expect(401)
+			.expect((res) => {
+				expect(res.body).toEqual({});
+			})	
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+});
+
+
+describe('POST /users/', () => {
+	it('should create a user', async () => {
+		const email = 'easyquanny@gmail.com';
+		const password = 'test123';
+
+		try {
+			await supertest(app)
+			.post('/users/')
+			.send({
+				email,
+				password
+			})
+			.expect(200)
+			.expect(async (res) => {
+				assert.ok(res.headers['x-auth']);
+				assert.equal(email, res.body.email);
+				assert.ok(res.body._id);
+
+				const user = await User.findOne({email});
+
+				assert.ok(user);
+				assert.notEqual(password, res.body.password);
+			})
+		} catch(e) {
+			console.log(e);
+			return (e);
+		}
+	});
+	it('should return validation errors if request invalid', async () => {
+		try {
+			await supertest(app)
+			.post('/users/')
+			.send({
+				email: 'hi',
+				password: '123'
+			})
+			.expect(400)
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+	it('should not create user if email in use', async () => {
+		try {
+			await supertest(app)
+			.post('/users')
+			.send({
+				email: users[0].email,
+				password: '123'
+			})
+			.expect(400)
 		} catch(e) {
 			console.log(e);
 			return e;

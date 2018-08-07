@@ -68,16 +68,16 @@ UserSchema.statics.findByToken = function(token) {    //statics are just methods
 
 	try {
 		decoded = jwt.verify(token, 'abc123');
+		return User.findOne({
+			_id: decoded._id,
+			'tokens.token': token,    //we put it in quotes because this is the way to query a nested document
+			'tokens.access': 'auth'
+		});
 	} catch(e) {
-		return Promise.reject    //returning rejected promise in case of error so our get request can catch error
+		return Promise.reject(e);    //returning rejected promise in case of error so our get request can catch error
 	}
-
-	return User.findOne({
-		_id: decoded._id,
-		'tokens.token': token,    //we put it in quotes because this is the way to query a nested document
-		'tokens.access': 'auth'
-	});
 };
+
 
 UserSchema.pre('save', function(next){  //mongoose middleware to run before a certain event
 	const user = this;
@@ -93,6 +93,7 @@ UserSchema.pre('save', function(next){  //mongoose middleware to run before a ce
 		next();
 	}   
 });
+
 
 const User = mongoose.model('User', UserSchema);
 

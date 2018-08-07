@@ -10,17 +10,17 @@ bcrypt.genSalt(10, (err, salt) => {   //our salt generator
 	});
 }); 
 
-// const data = {
-// 	id: 11
-// }
+const data = {
+	id: 11
+}
 
-// const token = jwt.sign(data, '123abc');     //takes object and creates hash and returns token
-// console.log(token);
+const token = jwt.sign(data, '123abc');     //takes object and creates hash and returns token
+console.log(token);
 
 
-// const decodedRes = jwt.verify(token, '123abc');   //takes token and salt and makes sure it was not changed
-// // returns decoded result
-// console.log(decodedRes);
+const decodedRes = jwt.verify(token, '123abc');   //takes token and salt and makes sure it was not changed
+// returns decoded result
+console.log(decodedRes);
 
 
 
