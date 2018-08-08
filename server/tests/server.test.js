@@ -329,7 +329,7 @@ describe('POST /users/login', () => {
 			await supertest(app)
 			.post('/users/login')
 			.send({
-				email: users[0].email,
+				email: users[1].email,
 				password: '123'
 			})
 			.expect(400)
@@ -344,4 +344,24 @@ describe('POST /users/login', () => {
 			return e;
 		}
 	});
+});
+
+
+describe('DELETE /users/me/token', () => {
+	it('remove auth token upon user logout', async () => {
+		try {
+			await supertest(app)
+			.delete('/users/me/token')
+			.set('x-auth', users[0].tokens[0].token)
+			.expect(200)
+			.expect((res) => {
+				User.findById(users[0]._id).then((user) => {
+					expect(user.tokens.length).toEqual(0);
+				});
+			});
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	})
 });

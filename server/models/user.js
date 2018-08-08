@@ -100,6 +100,19 @@ UserSchema.statics.findByCredentials = function(email, pw) {
 };
 
 
+UserSchema.methods.removeToken = function(token) {
+	const user = this;
+
+	return user.update({   
+		$pull: {     //$pull is a mongoose method that removes objects from a prop
+			tokens: {
+				token
+			}
+		}
+	})
+};
+
+
 UserSchema.pre('save', function(next){  //mongoose middleware to run before a certain event
 	const user = this;
 
