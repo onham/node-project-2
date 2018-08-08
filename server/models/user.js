@@ -79,6 +79,27 @@ UserSchema.statics.findByToken = function(token) {    //statics are just methods
 };
 
 
+UserSchema.statics.findByCredentials = function(email, pw) {
+	const User = this;
+
+	return User.findOne({email}).then((user) => {
+		if (!user) {
+			return Promise.reject()
+		}
+
+		return new Promise((resolve, reject) => {
+			bcrypt.compare(pw, user.password, (err, res) => {
+				if (res) {
+					resolve(user);
+				} else {
+					reject(err);
+				}
+			});
+		});
+	});
+};
+
+
 UserSchema.pre('save', function(next){  //mongoose middleware to run before a certain event
 	const user = this;
 

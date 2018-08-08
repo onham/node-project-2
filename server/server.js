@@ -139,8 +139,25 @@ app.post('/users/', (req, res) => {
 /* GET USER BY TOKEN */
 app.get('/users/me', authenticate, (req, res) => {   //we put authenticate func in our middleware folder
 	res.send(req.user);
-})
+});
 
+
+/* USER LOGIN */
+app.post('/users/login', (req, res) => {
+	const body = _.pick(req.body, ['email', 'password']);   
+
+	User.findByCredentials(body.email, body.password).then((user) => {
+		user.generateAuthToken().then((token) => {
+			res.header('x-auth', token).send(user);
+		});
+	}).catch((e) => {
+		res.status(400).send(e);
+	});
+});
+
+//pick off email and pw from the request body
+
+//res.send back body data
 
 app.listen(port, () => {
 	console.log(`starting on port ${port}`);
