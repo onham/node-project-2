@@ -257,11 +257,11 @@ describe('POST /users/', () => {
 				assert.ok(res.headers['x-auth']);
 				assert.equal(email, res.body.email);
 				assert.ok(res.body._id);
+				assert.notEqual(password, res.body.password);
+
 
 				const user = await User.findOne({email});
-
 				assert.ok(user);
-				assert.notEqual(password, res.body.password);
 			})
 		} catch(e) {
 			console.log(e);
@@ -291,6 +291,51 @@ describe('POST /users/', () => {
 				password: '123'
 			})
 			.expect(400)
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+});
+
+
+describe('POST /users/login', () => {
+	it('should login user and return auth token', async () => {
+		try {
+			await supertest(app)
+			.post('/users/login')
+			.send({
+				email: users[1].email,
+				password: users[1].password
+			})
+			.expect(200)
+			.expect((res) => {
+				assert.ok(res.headers['x-auth'])
+				User.findById(users[1]._id).then((user) => {
+					expect(user.tokens[0]).toInclude({
+						access: 'auth',
+						token: res.headers['x-auth']
+					});
+				});
+			});
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
+	it('should reject invalid login', async () => {
+		try {
+			await supertest(app)
+			.post('/users/login')
+			.send({
+				email: users[0].email,
+				password: '123'
+			})
+			.expect(400)
+			.expect((res) => {
+				expect(res.headers['x-auth']).toNotExist();
+			});
 		} catch(e) {
 			console.log(e);
 			return e;

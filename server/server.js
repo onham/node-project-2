@@ -155,9 +155,6 @@ app.post('/users/login', (req, res) => {
 	});
 });
 
-//pick off email and pw from the request body
-
-//res.send back body data
 
 app.listen(port, () => {
 	console.log(`starting on port ${port}`);
