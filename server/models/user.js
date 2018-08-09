@@ -49,7 +49,7 @@ UserSchema.methods.generateAuthToken = function() {  //using a regular function 
 	const token = jwt.sign({
 		_id: user._id.toHexString(), 
 		access 
-	}, 'abc123').toString();
+	}, process.env.JWT_SECRET).toString();
 
 	user.tokens = user.tokens.concat([{   //pushing to user's token array through concat
 		access, 
@@ -67,7 +67,7 @@ UserSchema.statics.findByToken = function(token) {    //statics are just methods
 	let decoded;
 
 	try {
-		decoded = jwt.verify(token, 'abc123');
+		decoded = jwt.verify(token, process.env.JWT_SECRET);
 		return User.findOne({
 			_id: decoded._id,
 			'tokens.token': token,    //we put it in quotes because this is the way to query a nested document

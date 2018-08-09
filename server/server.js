@@ -18,9 +18,10 @@ app.use(bodyParser.json())     //configuring middleware
 
 
 /* POST TODO */
-app.post('/todos', (req, res) => {   //making POST request to url of /todos, user input will be our text prop
+app.post('/todos', authenticate, (req, res) => {   //making POST request to url of /todos, user input will be our text prop
 	const todo = new Todo({
 		text: req.body.text,
+		_creator: req.user._id
 	});
 
 	todo.save().then((doc) => {    //actually saving to the database
@@ -32,8 +33,10 @@ app.post('/todos', (req, res) => {   //making POST request to url of /todos, use
 
 
 /* GET ALL TODOS */
-app.get('/todos', (req, res) => {  //making GET request to url
-	Todo.find().then((todos) => {   //model method -- finding and retrieving all entries from our 'todos' collection
+app.get('/todos', authenticate, (req, res) => {  //making GET request to url
+	Todo.find({
+		_creator: req.user._id
+	}).then((todos) => {   //model method -- finding and retrieving all entries from our 'todos' collection
 		res.send({     //sending back an object with our array in that object -- instead of sending back just an array, object provides more flexibility for the future
 			todos
 		})
@@ -44,7 +47,7 @@ app.get('/todos', (req, res) => {  //making GET request to url
 
 
 /* GET TODO BY ID */
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
     //so here we are sending back the key-value pair associated with param designated after :
 	const id = req.params.id
 
@@ -52,7 +55,10 @@ app.get('/todos/:id', (req, res) => {
 		return res.status(404).send();
 	}    
 
-	Todo.findById(id).then((todo) => {
+	Todo.findOne({
+		_id: id,
+		_creator: req.user._id
+	}).then((todo) => {
 		if (!todo) {
 			return res.status(404).send();
 		}
@@ -66,14 +72,17 @@ app.get('/todos/:id', (req, res) => {
 
 
 /* DELETE TODO BY ID */
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
 	const id = req.params.id;
 
 	if (!ObjectID.isValid(id)){  
 		return res.status(404).send();
 	}    
 
-	Todo.findByIdAndRemove(id).then((todo) => {
+	Todo.findOneAndRemove({
+		_id: id,
+		_creator: req.user._id
+	}).then((todo) => {
 		if (!todo) {
 			return res.status(404).send();
 		}
@@ -88,7 +97,7 @@ app.delete('/todos/:id', (req, res) => {
 
 
 /* UPDATE TODO */
-app.patch(`/todos/:id`, (req, res) => {
+app.patch(`/todos/:id`, authenticate, (req, res) => {
 	const id = req.params.id;
 	const body = _.pick(req.body, ['text', 'completed'])    //pick method of lodash allows you to scan the body of the request and turn its props into props of the const you declared
 
@@ -103,7 +112,10 @@ app.patch(`/todos/:id`, (req, res) => {
 		body.completedAt = null;   //null removes the prop from the body
 	}
 
-	Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {    //takes mongodb operators -- new returns updated entry to us
+	Todo.findOneAndUpdate({
+		_id: id,
+		_creator: req.user._id
+	}, {$set: body}, {new: true}).then((todo) => {    //takes mongodb operators -- new returns updated entry to us
 		if (!todo) {
 			return res.status(404).send();
 		}

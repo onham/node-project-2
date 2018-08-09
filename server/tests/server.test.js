@@ -12,6 +12,7 @@ const { app } = require('../server');
 beforeEach(populateUsers);
 beforeEach(populateTodos);
 
+
 describe('POST /todos', () => {
 	it('should create a new todo', async () => {
 		const text = 'test todo text';
@@ -19,6 +20,7 @@ describe('POST /todos', () => {
 		try {
 			await supertest(app)
 			.post('/todos')
+			.set('x-auth', users[0].tokens[0].token)
 			.send({
 				text
 			})
@@ -43,6 +45,7 @@ describe('POST /todos', () => {
 		try {
 			await supertest(app)
 			.post('/todos')
+			.set('x-auth', users[0].tokens[0].token)
 			.send({})
 			.expect(400)
 			.expect((res) => {
@@ -57,14 +60,18 @@ describe('POST /todos', () => {
 	});
 });
 
+
 describe('GET /todos', () => {
-	it('should get all todos', async () => {
+	it('should get all todos of a specified user', async () => {
 		try {
 			await supertest(app)
 			.get('/todos')
+			.set('x-auth', users[0].tokens[0].token)
 			.expect(200)
 			.expect((res) => {
-				assert.equal(2, res.body.todos.length)
+				assert.equal(1, res.body.todos.length);
+				assert.equal('first test todo', res.body.todos[0].text);
+				assert.equal(users[0]._id, res.body.todos[0]._creator);
 			})
 		} catch(e) {
 			console.log(e);
@@ -73,15 +80,30 @@ describe('GET /todos', () => {
 	})
 });
 
+
 describe('GET /todos/:id', () => {
 	it('should get a specific ID todo', async () => {
 		try {
 			await supertest(app)
 			.get(`/todos/${todos[0]._id.toHexString()}`)
+			.set('x-auth', users[0].tokens[0].token)
 			.expect(200)
 			.expect((res) => {
-				assert.equal(todos[0].text, res.body.todo.text)
-			})
+				assert.equal(todos[0].text, res.body.todo.text);
+				assert.equal(todos[0]._creator, users[0]._id);
+			});
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
+	it('should not get a todo created by other user', async () => {
+		try {
+			await supertest(app)
+			.get(`/todos/${todos[1]._id.toHexString()}`)
+			.set('x-auth', users[0].tokens[0].token)
+			.expect(404)
 		} catch(e) {
 			console.log(e);
 			return e;
@@ -93,6 +115,7 @@ describe('GET /todos/:id', () => {
 		try {
 			await supertest(app)
 			.get(`/todos/${id}`)
+			.set('x-auth', users[0].tokens[0].token)
 			.expect(404)
 		} catch(e) {
 			console.log(e);
@@ -106,6 +129,7 @@ describe('GET /todos/:id', () => {
 		try {
 			await supertest(app)
 			.get(`/todos/${nonId}`)
+			.set('x-auth', users[0].tokens[0].token)
 			.expect(404)
 		} catch(e) {
 			console.log(e);
@@ -114,20 +138,34 @@ describe('GET /todos/:id', () => {
 	});
 });
 
+
 describe('DELETE /todos/:id', () => {
-	it('should delete an item by id', async () => {
+	it('should delete an item from a specific user', async () => {
 		const hexId = todos[1]._id.toHexString();
 		try {
 			await supertest(app)
 			.delete(`/todos/${hexId}`)
+			.set('x-auth', users[1].tokens[0].token)
 			.expect(200)
 			.expect((res) => {
-				assert.equal(todos[1].text, res.body.todo.text)
+				assert.equal(todos[1].text, res.body.todo.text);
+				Todo.findById(hexId).then((todo) => {
+					expect(todo).toNotExist();
+				});
 			});
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
 
-			await Todo.findById(hexId).then((todo) => {
-				assert.equal(null, todo);
-			});
+	it('should not be able to delete an item from another user', async () => {
+		const hexId = todos[0]._id.toHexString();
+		try {
+			await supertest(app)
+			.delete(`/todos/${hexId}`)
+			.set('x-auth', users[1].tokens[0].token)
+			.expect(404)
 		} catch(e) {
 			console.log(e);
 			return e;
@@ -139,6 +177,7 @@ describe('DELETE /todos/:id', () => {
 		try {
 			await supertest(app)
 			.delete(`/todos/${id}`)
+			.set('x-auth', users[1].tokens[0].token)
 			.expect(404)
 		} catch(e) {
 			console.log(e);
@@ -152,6 +191,7 @@ describe('DELETE /todos/:id', () => {
 		try {
 			await supertest(app)
 			.delete(`/todos/${nonId}`)
+			.set('x-auth', users[1].tokens[0].token)
 			.expect(404)
 		} catch(e) {
 			console.log(e);
@@ -160,13 +200,15 @@ describe('DELETE /todos/:id', () => {
 	});
 })
 
+
 describe('PATCH /todos/:id', () => {
-	it('should be able to update items', async () => {
+	it('should be able to update items for a specific user', async () => {
 		const firstId = todos[0]._id.toHexString();
-		const text = 'updating through test'
+		const text = 'updating through test111';
 		try {
 			await supertest(app)
 			.patch(`/todos/${firstId}`)
+			.set('x-auth', users[0].tokens[0].token)
 			.send({
 				text,
 				completed: true
@@ -183,12 +225,31 @@ describe('PATCH /todos/:id', () => {
 		}
 	});
 
+	it('should not update the todo of another user', async () => {
+		const firstId = todos[0]._id.toHexString();
+		const text = 'updating';
+		try {
+			await supertest(app)
+			.patch(`/todos/${firstId}`)
+			.set('x-auth', users[1].tokens[0].token)
+			.send({
+				text,
+				completed: true
+			})
+			.expect(404)
+		} catch(e) {
+			console.log(e);
+			return e;
+		}
+	});
+
 	it('should clear completedAt when todo is not completed', async () => {
 		const secondId = todos[1]._id.toHexString();
 		const text = 'updating second entry text'
 		try {
 			await supertest(app)
 			.patch(`/todos/${secondId}`)
+			.set('x-auth', users[1].tokens[0].token)
 			.send({
 				text, 
 				completed: false
@@ -310,9 +371,9 @@ describe('POST /users/login', () => {
 			})
 			.expect(200)
 			.expect((res) => {
-				assert.ok(res.headers['x-auth'])
+				assert.ok(res.headers['x-auth']);
 				User.findById(users[1]._id).then((user) => {
-					expect(user.tokens[0]).toInclude({
+					expect(user.tokens[1]).toInclude({    //second token in array at this moment because we've just given the user a new token
 						access: 'auth',
 						token: res.headers['x-auth']
 					});
@@ -334,10 +395,7 @@ describe('POST /users/login', () => {
 			})
 			.expect(400)
 			.expect((res) => {
-				expect(res.headers['x-auth']).toNotExist();
-				User.findById(users[1]._id).then((user) => {
-					expect(user.tokens.length).toEqual(0);
-				});
+				expect(res.body).toEqual({});
 			});
 		} catch(e) {
 			console.log(e);

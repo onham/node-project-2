@@ -1,3 +1,5 @@
+require('../../config/config');
+
 const { ObjectID } = require('mongodb');
 const { Todo } = require('../../models/todo');
 const { User } = require('../../models/user');
@@ -16,13 +18,20 @@ const users = [
 		token: jwt.sign({
 			_id: userOneId,
 			access: 'auth'
-		}, 'abc123').toString()
+		}, process.env.JWT_SECRET).toString()
 	}]
 },
 {
 	_id: userTwoId,
 	email: 'newquanny@mq.com',
-	password: 'userTwoPass'
+	password: 'userTwoPass',
+	tokens: [{
+		access: 'auth',
+		token: jwt.sign({
+			_id: userTwoId,
+			access: 'auth'
+		}, process.env.JWT_SECRET).toString()
+	}]
 }
 ];
 
@@ -37,13 +46,15 @@ const populateUsers = async () => {
 
 const todos = [{
 	_id: new ObjectID(),      //declaring id here so we can use in test -- remember this is in hex
-	text: 'first test todo'
+	text: 'first test todo',
+	_creator: users[0]._id
 },
 {
 	_id: new ObjectID(),
 	text: 'second test todo',
 	completed: true,
-	completedAt: 333
+	completedAt: 333,
+	_creator: users[1]._id
 }
 ];
 
